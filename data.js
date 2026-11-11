@@ -1,245 +1,266 @@
 /* =========================================================
- * 6학년 · What do you want to be? 데이터
- * - 꿈 말하기(I want to be a ___.) : 초급 / 중급 / 고급 각 15개 (총 45문장)
- * - 카테고리(인덱스별 공통) : book(교과서 직업 7) / fun(인기 직업 8)
- * - 묻는 표현 5개 · 이유(I like ___.) 13개 · 반응 표현 5개
- * - 내 꿈 만들기용 데이터 (직업 + 이유 조합)
- * - 단어 뜻 사전
- *  ※ 직업 이미지: Canva에서 만든 그림을 images/jobs/<id>.png 로 넣으면
- *    자동으로 카드에 표시되고, 파일이 없으면 이모지로 대체됩니다.
- * - 내 꿈 세트(3개) + 내 표현(질문 1 · 반응 1) 은 app.js 에서 localStorage 에 저장
+ * 6학년 9단원 · What are you going to do? 데이터 (가을 테마)
+ * - 질문 5개 : What are you going to do ___?
+ * - 활동 60개 : 5개 종류 × 12개  →  I'm going to ___.
+ *     id    : 그림 파일 이름(images/<id>.png)
+ *     cat   : 종류(home · play · place · family · trip)
+ *     en/ko : 초급 동사구 / "나는 ___ 거야"의 빈칸
+ *     mid   : 중급(누구와 · 어디서 · 무엇을 하러를 붙인 문장)
+ *     when  : 잘 어울리는 질문 id 목록(⭐ 추천)
+ *     book  : 📘 교과서 표현
+ *     scene : Canva 그림 생성에 쓴 장면 설명
+ * - 단어 뜻 사전 WORDS (모든 문장의 단어 포함)
  * ========================================================= */
 
-/* ===== 직업 15개 (모든 탭에서 공통으로 쓰는 기본 목록) =====
- * en  : 관사까지 포함 (a doctor / an artist)
- * img : Canva 이미지 파일 경로
- * canva : Canva 'Magic Media'에 넣을 이미지 생성 프롬프트 */
-const JOBS = [
-  // 📘 교과서 직업 (7)
-  { id: "doctor",         en: "a doctor",         ko: "의사",           emoji: "🧑‍⚕️", cat: "book", reason: "helping people",
-    why: "I want to help sick people.",       whyKo: "나는 아픈 사람들을 돕고 싶어.",
-    canva: "cute cartoon kid doctor with a stethoscope in a white coat, bright flat illustration, white background" },
-  { id: "teacher",        en: "a teacher",        ko: "선생님",         emoji: "🧑‍🏫", cat: "book", reason: "children",
-    why: "I want to teach children.",         whyKo: "나는 아이들을 가르치고 싶어.",
-    canva: "cute cartoon kid teacher in front of a blackboard, bright flat illustration, white background" },
-  { id: "singer",         en: "a singer",         ko: "가수",           emoji: "🧑‍🎤", cat: "book", reason: "singing",
-    why: "I want to sing on stage.",          whyKo: "나는 무대에서 노래하고 싶어.",
-    canva: "cute cartoon kid singer with a microphone on a colorful stage, bright flat illustration" },
-  { id: "scientist",      en: "a scientist",      ko: "과학자",         emoji: "🧑‍🔬", cat: "book", reason: "science",
-    why: "I want to make new things.",        whyKo: "나는 새로운 것을 만들고 싶어.",
-    canva: "cute cartoon kid scientist with goggles and test tubes in a lab, bright flat illustration" },
-  { id: "police-officer", en: "a police officer", ko: "경찰관",         emoji: "👮", cat: "book", reason: "helping people",
-    why: "I want to keep people safe.",       whyKo: "나는 사람들을 안전하게 지키고 싶어.",
-    canva: "cute cartoon kid police officer in a blue uniform, friendly, bright flat illustration, white background" },
-  { id: "cook",           en: "a cook",           ko: "요리사",         emoji: "🧑‍🍳", cat: "book", reason: "cooking",
-    why: "I want to make delicious food.",    whyKo: "나는 맛있는 음식을 만들고 싶어.",
-    canva: "cute cartoon kid chef with a tall white hat cooking in a kitchen, bright flat illustration" },
-  { id: "pilot",          en: "a pilot",          ko: "비행기 조종사",  emoji: "🧑‍✈️", cat: "book", reason: "flying",
-    why: "I want to fly around the world.",   whyKo: "나는 세계를 날아다니고 싶어.",
-    canva: "cute cartoon kid pilot in uniform in front of an airplane, bright flat illustration, blue sky" },
-  // 🌟 인기 직업 (8)
-  { id: "firefighter",    en: "a firefighter",    ko: "소방관",         emoji: "🧑‍🚒", cat: "fun", reason: "helping people",
-    why: "I want to save people.",            whyKo: "나는 사람들을 구하고 싶어.",
-    canva: "cute cartoon kid firefighter with a helmet and a fire truck, bright flat illustration" },
-  { id: "artist",         en: "an artist",        ko: "화가",           emoji: "🧑‍🎨", cat: "fun", reason: "drawing",
-    why: "I want to draw beautiful pictures.", whyKo: "나는 아름다운 그림을 그리고 싶어.",
-    canva: "cute cartoon kid artist painting on a canvas with a palette, bright flat illustration" },
-  { id: "writer",         en: "a writer",         ko: "작가",           emoji: "✍️", cat: "fun", reason: "writing stories",
-    why: "I want to write fun books.",        whyKo: "나는 재미있는 책을 쓰고 싶어.",
-    canva: "cute cartoon kid writer writing a story book at a desk, bright flat illustration" },
-  { id: "soccer-player",  en: "a soccer player",  ko: "축구 선수",      emoji: "⚽", cat: "fun", reason: "soccer",
-    why: "I want to play in the World Cup.",  whyKo: "나는 월드컵에서 뛰고 싶어.",
-    canva: "cute cartoon kid soccer player kicking a ball on a green field, bright flat illustration" },
-  { id: "youtuber",       en: "a YouTuber",       ko: "유튜버",         emoji: "📹", cat: "fun", reason: "making videos",
-    why: "I want to make fun videos.",        whyKo: "나는 재미있는 영상을 만들고 싶어.",
-    canva: "cute cartoon kid video creator talking to a camera with a ring light, bright flat illustration" },
-  { id: "game-designer",  en: "a game designer",  ko: "게임 디자이너",  emoji: "🎮", cat: "fun", reason: "games",
-    why: "I want to make my own games.",      whyKo: "나는 나만의 게임을 만들고 싶어.",
-    canva: "cute cartoon kid game designer at a computer making a video game, bright flat illustration" },
-  { id: "vet",            en: "a vet",            ko: "수의사",         emoji: "🐶", cat: "fun", reason: "animals",
-    why: "I want to help sick animals.",      whyKo: "나는 아픈 동물들을 돕고 싶어.",
-    canva: "cute cartoon kid veterinarian hugging a puppy and a kitten, bright flat illustration" },
-  { id: "dancer",         en: "a dancer",         ko: "댄서",           emoji: "💃", cat: "fun", reason: "dancing",
-    why: "I want to dance on a big stage.",   whyKo: "나는 큰 무대에서 춤추고 싶어.",
-    canva: "cute cartoon kid dancer dancing on a colorful stage, bright flat illustration" },
+const QUESTIONS = [
+  { id: "afternoon", emoji: "🌤️", ko: "오늘 오후",  koAt: "오늘 오후에", en: "this afternoon" },
+  { id: "tonight",   emoji: "🌙", ko: "오늘 밤",    koAt: "오늘 밤에",   en: "tonight" },
+  { id: "tomorrow",  emoji: "📅", ko: "내일",       koAt: "내일",        en: "tomorrow" },
+  { id: "weekend",   emoji: "🎈", ko: "이번 주말",  koAt: "이번 주말에", en: "this weekend" },
+  { id: "vacation",  emoji: "🎒", ko: "겨울방학",   koAt: "겨울방학에",  en: "this winter vacation" },
 ];
-JOBS.forEach(j => { j.img = `images/jobs/${j.id}.png`; });
 
-/* 카테고리: 같은 인덱스끼리 같은 종류 */
-const SUGGESTION_CATEGORIES = JOBS.map(j => j.cat);
-
-/* ===== 이유 (I like ___.) ===== */
-const REASONS = [
-  { en: "helping people",  ko: "사람들을 돕는 것", emoji: "🤝" },
-  { en: "children",        ko: "아이들",           emoji: "🧒" },
-  { en: "singing",         ko: "노래하는 것",      emoji: "🎵" },
-  { en: "science",         ko: "과학",             emoji: "🔬" },
-  { en: "cooking",         ko: "요리하는 것",      emoji: "🍳" },
-  { en: "flying",          ko: "하늘을 나는 것",   emoji: "✈️" },
-  { en: "drawing",         ko: "그림 그리는 것",   emoji: "🖍️" },
-  { en: "writing stories", ko: "이야기 쓰는 것",   emoji: "📖" },
-  { en: "soccer",          ko: "축구",             emoji: "⚽" },
-  { en: "making videos",   ko: "영상 만드는 것",   emoji: "🎬" },
-  { en: "games",           ko: "게임",             emoji: "🕹️" },
-  { en: "animals",         ko: "동물",             emoji: "🐾" },
-  { en: "dancing",         ko: "춤추는 것",        emoji: "🩰" },
+const CATS = [
+  { id: "home",   emoji: "🏠",      ko: "집·학교에서", color: "#ffe3c4" },
+  { id: "play",   emoji: "⚽",      ko: "운동·놀이",   color: "#ffd6cf" },
+  { id: "place",  emoji: "📍",      ko: "장소에 가기", color: "#fff1b8" },
+  { id: "family", emoji: "👨‍👩‍👧", ko: "가족과 함께", color: "#e8f0c8" },
+  { id: "trip",   emoji: "✈️",      ko: "가족 여행",   color: "#f3dccb" },
 ];
-const findReasonByEn = en => REASONS.find(r => r.en === en);
 
-/* 한국어 조사: 받침 있으면 a, 없으면 b (예: josa("선생님","이","가") → "선생님이") */
-function josa(word, a, b) {
-  const c = word.charCodeAt(word.length - 1);
-  const has = c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
-  return word + (has ? a : b);
-}
-const beKo = j => `나는 ${josa(j.ko, "이", "가")} 되고 싶어.`;
-const likeKo = r => `나는 ${josa(r.ko, "을", "를")} 좋아해.`;
+const A = "afternoon", N = "tonight", T = "tomorrow", W = "weekend", V = "vacation";
 
-/* ===== 꿈 말하기 문장 (모두 "I want to be a/an ~." 로 시작) ===== */
-const SUGGESTION_LEVELS = {
-  beginner: JOBS.map(j => ({
-    en: `I want to be ${j.en}.`,
-    ko: beKo(j),
-    emoji: j.emoji, img: j.img,
-  })),
-  intermediate: JOBS.map(j => {
-    const r = findReasonByEn(j.reason);
-    return {
-      en: `I want to be ${j.en}. I like ${r.en}.`,
-      ko: `${beKo(j)} ${likeKo(r)}`,
-      emoji: j.emoji, img: j.img,
-    };
-  }),
-  advanced: JOBS.map(j => {
-    const r = findReasonByEn(j.reason);
-    return {
-      en: `I want to be ${j.en}. I like ${r.en}. ${j.why}`,
-      ko: `${beKo(j)} ${likeKo(r)} ${j.whyKo}`,
-      emoji: j.emoji, img: j.img,
-    };
-  }),
+const ACTIVITIES = [
+  /* ---------- 🏠 집·학교에서 ---------- */
+  { id: "stay_home", cat: "home", book: true, emoji: "🏠", en: "stay home", ko: "집에 있을", when: [A, N, W],
+    mid: { en: "stay home and watch a movie", ko: "집에 있으면서 영화를 볼" },
+    scene: "a Korean boy relaxing at home on a cozy sofa under a blanket, looking out the window at falling autumn leaves" },
+  { id: "clean_room", cat: "home", book: true, emoji: "🧹", en: "clean my room", ko: "내 방을 청소할", when: [A, T, W],
+    mid: { en: "clean my room with my little brother", ko: "남동생과 함께 내 방을 청소할" },
+    scene: "a Korean girl cleaning her messy bedroom with a broom, putting toys and books neatly away" },
+  { id: "study_math", cat: "home", book: true, emoji: "➗", en: "study math", ko: "수학 공부를 할", when: [A, N, T, V],
+    mid: { en: "study math for the test", ko: "시험을 대비해 수학 공부를 할" },
+    scene: "a Korean boy studying math at a desk with a notebook full of numbers, plus and minus signs, and a pencil" },
+  { id: "do_homework", cat: "home", emoji: "✏️", en: "do my homework", ko: "숙제를 할", when: [A, N, T],
+    mid: { en: "do my homework at my desk", ko: "내 책상에서 숙제를 할" },
+    scene: "a Korean girl doing homework at her desk with a backpack, workbook and pencil case" },
+  { id: "read_comics", cat: "home", emoji: "📚", en: "read a comic book", ko: "만화책을 읽을", when: [A, N, W],
+    mid: { en: "read a comic book in bed", ko: "침대에서 만화책을 읽을" },
+    scene: "a Korean boy lying on his bed happily reading a colorful comic book" },
+  { id: "play_games", cat: "home", emoji: "🎮", en: "play computer games", ko: "컴퓨터 게임을 할", when: [A, N, W],
+    mid: { en: "play computer games with my cousin", ko: "사촌과 컴퓨터 게임을 할" },
+    scene: "two Korean kids at home playing a computer game together in front of a monitor with a keyboard and mouse" },
+  { id: "watch_tv", cat: "home", emoji: "📺", en: "watch TV", ko: "TV를 볼", when: [N, W],
+    mid: { en: "watch TV with my family", ko: "가족과 함께 TV를 볼" },
+    scene: "a Korean family sitting together on a sofa watching TV in the living room in the evening" },
+  { id: "draw_picture", cat: "home", emoji: "🎨", en: "draw a picture", ko: "그림을 그릴", when: [A, T, W],
+    mid: { en: "draw a picture of autumn leaves", ko: "단풍잎 그림을 그릴" },
+    scene: "a Korean girl drawing a picture of red maple leaves on a sketchbook with crayons" },
+  { id: "practice_piano", cat: "home", emoji: "🎹", en: "practice the piano", ko: "피아노 연습을 할", when: [A, T, V],
+    mid: { en: "practice the piano for the concert", ko: "연주회를 위해 피아노 연습을 할" },
+    scene: "a Korean girl practicing the piano with music notes floating in the air" },
+  { id: "leaf_bookmark", cat: "home", emoji: "🔖", en: "make a leaf bookmark", ko: "낙엽 책갈피를 만들", when: [A, T, W],
+    mid: { en: "make a leaf bookmark for my teacher", ko: "선생님께 드릴 낙엽 책갈피를 만들" },
+    scene: "a Korean child gluing a red maple leaf onto a paper bookmark with a ribbon at a table" },
+  { id: "school_festival", cat: "home", emoji: "🎭", en: "practice for the school festival", ko: "학교 축제 연습을 할", when: [A, T],
+    mid: { en: "practice a dance for the school festival", ko: "학교 축제에서 출 춤을 연습할" },
+    scene: "Korean students practicing a dance together on a school stage decorated for a school festival" },
+  { id: "take_nap", cat: "home", emoji: "😴", en: "take a nap", ko: "낮잠을 잘", when: [A, W],
+    mid: { en: "take a nap with my cat", ko: "고양이와 함께 낮잠을 잘" },
+    scene: "a Korean child sleeping peacefully on a sofa next to a sleeping cat, with Zzz bubbles shown as small clouds" },
+
+  /* ---------- ⚽ 운동·놀이 ---------- */
+  { id: "baseball_game", cat: "play", book: true, emoji: "⚾", en: "watch a baseball game", ko: "야구 경기를 볼", when: [N, T, W],
+    mid: { en: "watch a baseball game at the stadium", ko: "야구장에서 야구 경기를 볼" },
+    scene: "a Korean boy and his dad cheering in the stands of a baseball stadium, a batter hitting a ball on the field" },
+  { id: "play_soccer", cat: "play", emoji: "⚽", en: "play soccer", ko: "축구를 할", when: [A, T, W],
+    mid: { en: "play soccer with my friends after school", ko: "방과 후에 친구들과 축구를 할" },
+    scene: "Korean kids kicking a soccer ball on a school field with a goal post" },
+  { id: "ride_bike", cat: "play", emoji: "🚲", en: "ride my bike", ko: "자전거를 탈", when: [A, T, W],
+    mid: { en: "ride my bike along the river", ko: "강을 따라 자전거를 탈" },
+    scene: "a Korean girl with a helmet riding a bicycle on a path along a river with autumn trees" },
+  { id: "fly_kite", cat: "play", emoji: "🪁", en: "fly a kite", ko: "연을 날릴", when: [A, T, W],
+    mid: { en: "fly a kite on the hill", ko: "언덕에서 연을 날릴" },
+    scene: "a Korean child flying a colorful kite on a grassy hill under a clear autumn sky, with orange and red maple trees nearby" },
+  { id: "play_badminton", cat: "play", emoji: "🏸", en: "play badminton", ko: "배드민턴을 칠", when: [A, T, W],
+    mid: { en: "play badminton with my dad in the park", ko: "공원에서 아빠와 배드민턴을 칠" },
+    scene: "a Korean girl and her dad playing badminton in a park with rackets and a shuttlecock" },
+  { id: "play_basketball", cat: "play", emoji: "🏀", en: "play basketball", ko: "농구를 할", when: [A, T, W],
+    mid: { en: "play basketball at the school gym", ko: "학교 체육관에서 농구를 할" },
+    scene: "a Korean boy shooting a basketball into a hoop in a school gym" },
+  { id: "jump_rope", cat: "play", emoji: "🪢", en: "jump rope", ko: "줄넘기를 할", when: [A, T],
+    mid: { en: "jump rope in the playground", ko: "운동장에서 줄넘기를 할" },
+    scene: "a Korean girl jumping rope on a school playground" },
+  { id: "inline_skate", cat: "play", emoji: "🛼", en: "go inline skating", ko: "인라인스케이트를 탈", when: [A, T, W],
+    mid: { en: "go inline skating at the park", ko: "공원에서 인라인스케이트를 탈" },
+    scene: "a Korean boy wearing a helmet and knee pads riding inline skates on a park path with fallen leaves" },
+  { id: "play_dodgeball", cat: "play", emoji: "🤾", en: "play dodgeball", ko: "피구를 할", when: [A, T],
+    mid: { en: "play dodgeball with my classmates", ko: "반 친구들과 피구를 할" },
+    scene: "Korean classmates playing dodgeball on a school playground, one child throwing a ball and others dodging" },
+  { id: "practice_taekwondo", cat: "play", emoji: "🥋", en: "practice taekwondo", ko: "태권도 연습을 할", when: [A, N, T],
+    mid: { en: "practice taekwondo for the black belt test", ko: "검은 띠 심사를 위해 태권도 연습을 할" },
+    scene: "a Korean child in a white taekwondo uniform doing a high kick in a taekwondo studio" },
+  { id: "sports_day", cat: "play", emoji: "🏃", en: "run a race on sports day", ko: "운동회에서 달리기를 할", when: [T],
+    mid: { en: "run a relay race on sports day", ko: "운동회에서 이어달리기를 할" },
+    scene: "Korean kids running a relay race passing a baton at a school sports day with flags strung overhead" },
+  { id: "board_games", cat: "play", emoji: "🎲", en: "play board games", ko: "보드게임을 할", when: [A, N, W],
+    mid: { en: "play board games with my friends", ko: "친구들과 보드게임을 할" },
+    scene: "Korean kids sitting around a table playing a board game with dice and game pieces" },
+
+  /* ---------- 📍 장소에 가기 ---------- */
+  { id: "pc_room", cat: "place", emoji: "🖥️", en: "go to a PC room", ko: "PC방에 갈", when: [A, W],
+    mid: { en: "go to a PC room with my friends", ko: "친구들과 PC방에 갈" },
+    scene: "two Korean kids wearing headsets playing computer games side by side at a PC cafe with rows of computers" },
+  { id: "comic_cafe", cat: "place", emoji: "📖", en: "go to a comic book cafe", ko: "만화 카페에 갈", when: [A, W, V],
+    mid: { en: "go to a comic book cafe to read comics", ko: "만화책을 읽으러 만화 카페에 갈" },
+    scene: "Korean kids reading comic books on cozy cushions in a comic book cafe with tall bookshelves full of comics" },
+  { id: "karaoke", cat: "place", emoji: "🎤", en: "go to a coin karaoke room", ko: "코인노래방에 갈", when: [A, N, W],
+    mid: { en: "go to a coin karaoke room to sing songs", ko: "노래를 부르러 코인노래방에 갈" },
+    scene: "two Korean kids singing with microphones in a small karaoke booth with a screen and colorful lights" },
+  { id: "library", cat: "place", emoji: "🏛️", en: "go to the library", ko: "도서관에 갈", when: [A, T, W, V],
+    mid: { en: "go to the library to borrow books", ko: "책을 빌리러 도서관에 갈" },
+    scene: "a Korean girl borrowing books at a library desk with tall bookshelves behind her" },
+  { id: "bookstore", cat: "place", emoji: "📕", en: "go to the bookstore", ko: "서점에 갈", when: [A, T, W],
+    mid: { en: "go to the bookstore to buy a new book", ko: "새 책을 사러 서점에 갈" },
+    scene: "a Korean boy choosing a new book from shelves in a bright bookstore" },
+  { id: "shopping_mall", cat: "place", emoji: "🛍️", en: "go to the shopping mall", ko: "쇼핑몰에 갈", when: [T, W],
+    mid: { en: "go to the shopping mall to buy a jacket", ko: "재킷을 사러 쇼핑몰에 갈" },
+    scene: "a Korean girl and her mom holding shopping bags in a shopping mall, trying on a new jacket" },
+  { id: "bakery", cat: "place", emoji: "🥐", en: "go to the bakery", ko: "빵집에 갈", when: [A, T],
+    mid: { en: "go to the bakery to buy bread", ko: "빵을 사러 빵집에 갈" },
+    scene: "a Korean child pointing at fresh bread and croissants on the shelves of a bakery" },
+  { id: "escape_room", cat: "place", emoji: "🔐", en: "go to an escape room cafe", ko: "방탈출 카페에 갈", when: [A, W],
+    mid: { en: "go to an escape room cafe with my friends", ko: "친구들과 방탈출 카페에 갈" },
+    scene: "Korean kids with flashlights solving puzzles and opening a locked box in a mysterious escape room" },
+  { id: "trampoline", cat: "place", emoji: "🤸", en: "go to a trampoline park", ko: "트램펄린 파크에 갈", when: [A, W, V],
+    mid: { en: "go to a trampoline park to jump high", ko: "높이 뛰러 트램펄린 파크에 갈" },
+    scene: "Korean kids jumping high on colorful trampolines in an indoor trampoline park" },
+  { id: "cat_cafe", cat: "place", emoji: "🐱", en: "go to a cat cafe", ko: "고양이 카페에 갈", when: [A, W],
+    mid: { en: "go to a cat cafe to play with cats", ko: "고양이랑 놀러 고양이 카페에 갈" },
+    scene: "a Korean girl playing with several cute cats in a cozy cat cafe with cat towers" },
+  { id: "hair_salon", cat: "place", emoji: "💇", en: "go to the hair salon", ko: "미용실에 갈", when: [A, T, W],
+    mid: { en: "go to the hair salon to get a haircut", ko: "머리를 자르러 미용실에 갈" },
+    scene: "a Korean boy sitting in a chair at a hair salon while a hairdresser cuts his hair with scissors, mirror in front" },
+  { id: "dentist", cat: "place", emoji: "🦷", en: "go to the dentist", ko: "치과에 갈", when: [A, T],
+    mid: { en: "go to the dentist with my mom", ko: "엄마와 함께 치과에 갈" },
+    scene: "a Korean child sitting in a dentist chair opening their mouth while a friendly dentist checks their teeth, a big tooth model nearby" },
+
+  /* ---------- 👨‍👩‍👧 가족과 함께 ---------- */
+  { id: "visit_grandparents", cat: "family", book: true, emoji: "👵", en: "visit my grandparents", ko: "할머니, 할아버지 댁에 갈", when: [T, W, V],
+    mid: { en: "visit my grandparents in the countryside", ko: "시골에 계신 할머니, 할아버지 댁에 갈" },
+    scene: "a Korean child hugging their grandma and grandpa in front of a country house with a persimmon tree" },
+  { id: "go_camping", cat: "family", book: true, emoji: "⛺", en: "go camping", ko: "캠핑을 갈", when: [W, V],
+    mid: { en: "go camping in the forest with my family", ko: "가족과 숲으로 캠핑을 갈" },
+    scene: "a Korean family camping in an autumn forest with a tent and a small campfire" },
+  { id: "pick_apples", cat: "family", emoji: "🍎", en: "pick apples", ko: "사과를 딸", when: [T, W],
+    mid: { en: "pick apples at an apple farm", ko: "사과 농장에서 사과를 딸" },
+    scene: "a Korean child picking red apples from a tree at an apple farm and putting them in a basket" },
+  { id: "pick_chestnuts", cat: "family", emoji: "🌰", en: "pick up chestnuts", ko: "밤을 주울", when: [T, W],
+    mid: { en: "pick up chestnuts on the mountain", ko: "산에서 밤을 주울" },
+    scene: "a Korean child with gloves picking up brown chestnuts and spiky chestnut shells from the ground into a basket under a chestnut tree" },
+  { id: "dig_sweet_potatoes", cat: "family", emoji: "🍠", en: "dig sweet potatoes", ko: "고구마를 캘", when: [T, W],
+    mid: { en: "dig sweet potatoes with my grandma", ko: "할머니와 함께 고구마를 캘" },
+    scene: "a Korean child and grandma pulling purple sweet potatoes out of the soil in a field" },
+  { id: "autumn_leaves", cat: "family", emoji: "🍁", en: "see the autumn leaves", ko: "단풍 구경을 할", when: [T, W],
+    mid: { en: "see the autumn leaves with my parents", ko: "부모님과 단풍 구경을 할" },
+    scene: "a Korean child and parents walking under bright red and orange maple trees, looking up at the autumn leaves" },
+  { id: "go_hiking", cat: "family", emoji: "⛰️", en: "go hiking", ko: "등산을 갈", when: [T, W, V],
+    mid: { en: "go hiking with my dad", ko: "아빠와 함께 등산을 갈" },
+    scene: "a Korean child and dad hiking up a mountain trail with backpacks and hiking sticks" },
+  { id: "pumpkin_soup", cat: "family", emoji: "🎃", en: "make pumpkin soup", ko: "호박죽을 만들", when: [N, T, W],
+    mid: { en: "make pumpkin soup with my mom", ko: "엄마와 함께 호박죽을 만들" },
+    scene: "a Korean child and mom cooking yellow pumpkin soup in a pot in the kitchen with a pumpkin on the table" },
+  { id: "have_picnic", cat: "family", emoji: "🧺", en: "have a picnic", ko: "소풍을 갈", when: [T, W],
+    mid: { en: "have a picnic by the river", ko: "강가로 소풍을 갈" },
+    scene: "a Korean family having a picnic on a mat by a river with a basket of gimbap and fruit" },
+  { id: "wash_car", cat: "family", emoji: "🚗", en: "wash the car", ko: "세차를 할", when: [A, T, W],
+    mid: { en: "wash the car with my dad", ko: "아빠와 함께 세차를 할" },
+    scene: "a Korean child and dad washing a car with sponges, a bucket and soap bubbles" },
+  { id: "walk_dog", cat: "family", emoji: "🐕", en: "walk my dog", ko: "강아지를 산책시킬", when: [A, N, T, W],
+    mid: { en: "walk my dog in the park", ko: "공원에서 강아지를 산책시킬" },
+    scene: "a Korean girl walking her small dog on a leash in a park with autumn trees" },
+  { id: "cook_dinner", cat: "family", emoji: "🍳", en: "cook dinner", ko: "저녁을 요리할", when: [N, T],
+    mid: { en: "cook dinner for my family", ko: "가족을 위해 저녁을 요리할" },
+    scene: "a Korean boy wearing an apron cooking dinner with a frying pan while his family waits at the dining table" },
+
+  /* ---------- ✈️ 가족 여행 ---------- */
+  { id: "jeju", cat: "trip", emoji: "🍊", en: "travel to Jeju Island", ko: "제주도로 여행을 갈", when: [W, V],
+    mid: { en: "travel to Jeju Island by plane", ko: "비행기를 타고 제주도로 여행을 갈" },
+    scene: "a Korean family arriving on Jeju Island with a dol hareubang stone statue, tangerine trees and an airplane in the sky" },
+  { id: "gyeongju", cat: "trip", emoji: "🛕", en: "visit Gyeongju", ko: "경주에 갈", when: [W, V],
+    mid: { en: "visit Gyeongju to see Bulguksa Temple", ko: "불국사를 보러 경주에 갈" },
+    scene: "a Korean family visiting Bulguksa Temple in Gyeongju with a traditional stone pagoda and autumn trees" },
+  { id: "busan", cat: "trip", emoji: "🎆", en: "go to Busan", ko: "부산에 갈", when: [W, V],
+    mid: { en: "go to Busan to see the fireworks festival", ko: "불꽃 축제를 보러 부산에 갈" },
+    scene: "a Korean family watching fireworks over the Gwangan Bridge in Busan at night by the sea" },
+  { id: "seoraksan", cat: "trip", emoji: "🏔️", en: "climb Seoraksan Mountain", ko: "설악산에 오를", when: [W, V],
+    mid: { en: "climb Seoraksan Mountain with my family", ko: "가족과 함께 설악산에 오를" },
+    scene: "a Korean family climbing rocky Seoraksan Mountain covered in red and orange autumn leaves" },
+  { id: "jeonju", cat: "trip", emoji: "🏘️", en: "go to Jeonju Hanok Village", ko: "전주 한옥마을에 갈", when: [W, V],
+    mid: { en: "go to Jeonju Hanok Village to eat bibimbap", ko: "비빔밥을 먹으러 전주 한옥마을에 갈" },
+    scene: "a Korean child in hanbok walking through a traditional hanok village with tiled roofs, holding a bowl of bibimbap" },
+  { id: "gyeongbokgung", cat: "trip", emoji: "👑", en: "visit Gyeongbokgung Palace", ko: "경복궁에 갈", when: [W, V],
+    mid: { en: "visit Gyeongbokgung Palace in Seoul", ko: "서울에 있는 경복궁에 갈" },
+    scene: "a Korean family visiting Gyeongbokgung Palace with its traditional gate and royal guards in Seoul" },
+  { id: "amusement_park", cat: "trip", emoji: "🎢", en: "go to an amusement park", ko: "놀이공원에 갈", when: [T, W, V],
+    mid: { en: "go to an amusement park to ride a roller coaster", ko: "롤러코스터를 타러 놀이공원에 갈" },
+    scene: "Korean kids riding a roller coaster at an amusement park with a Ferris wheel behind" },
+  { id: "aquarium", cat: "trip", emoji: "🐠", en: "go to the aquarium", ko: "아쿠아리움에 갈", when: [T, W, V],
+    mid: { en: "go to the aquarium to see sharks", ko: "상어를 보러 아쿠아리움에 갈" },
+    scene: "a Korean child looking at sharks and colorful fish through the big glass tank of an aquarium" },
+  { id: "train_trip", cat: "trip", emoji: "🚆", en: "take a train trip", ko: "기차 여행을 할", when: [W, V],
+    mid: { en: "take a train trip to Gangneung", ko: "강릉으로 기차 여행을 할" },
+    scene: "a Korean family looking out the window of a train traveling past autumn mountains toward the sea" },
+  { id: "japan", cat: "trip", emoji: "🗾", en: "travel to Japan", ko: "일본으로 여행을 갈", when: [V],
+    mid: { en: "travel to Japan to eat sushi", ko: "초밥을 먹으러 일본으로 여행을 갈" },
+    scene: "a Korean family in Japan eating sushi with a red Japanese torii gate and Mount Fuji in the background" },
+  { id: "nami_island", cat: "trip", emoji: "🍂", en: "visit Nami Island", ko: "남이섬에 갈", when: [W, V],
+    mid: { en: "visit Nami Island to see the yellow ginkgo trees", ko: "노란 은행나무를 보러 남이섬에 갈" },
+    scene: "a Korean family walking on a path lined with tall yellow ginkgo trees on Nami Island, a ferry boat on the river" },
+  { id: "suncheon", cat: "trip", emoji: "🌾", en: "go to Suncheon Bay", ko: "순천만에 갈", when: [W, V],
+    mid: { en: "go to Suncheon Bay to see the reeds", ko: "갈대를 보러 순천만에 갈" },
+    scene: "a Korean family walking on a wooden deck through golden reed fields at Suncheon Bay wetland" },
+];
+
+/* ===== 단어 뜻 사전 (소문자 키) ===== */
+const WORDS = {
+  // 질문·대답 공통
+  "what": "무엇", "are": "~이다(are)", "you": "너", "going": "~할 예정인(going to)", "to": "~에, ~하러(to)", "do": "하다",
+  "this": "이번, 오늘", "afternoon": "오후", "tonight": "오늘 밤", "tomorrow": "내일", "weekend": "주말",
+  "winter": "겨울", "vacation": "방학", "i'm": "나는 ~이다(I am)", "i": "나", "am": "~이다(am)",
+  // 동사
+  "stay": "머물다", "home": "집", "clean": "청소하다", "my": "나의", "room": "방", "study": "공부하다", "math": "수학",
+  "homework": "숙제", "read": "읽다", "a": "하나의", "an": "하나의", "comic": "만화", "book": "책", "books": "책들", "comics": "만화책들",
+  "play": "놀다, (운동·게임을) 하다", "computer": "컴퓨터", "games": "게임들", "watch": "보다", "tv": "텔레비전",
+  "draw": "그리다", "picture": "그림", "practice": "연습하다", "the": "그", "piano": "피아노", "make": "만들다",
+  "leaf": "나뭇잎", "bookmark": "책갈피", "for": "~을 위해", "school": "학교", "festival": "축제", "take": "(잠을) 자다, 타다",
+  "nap": "낮잠", "baseball": "야구", "game": "경기", "soccer": "축구", "ride": "타다", "bike": "자전거", "fly": "날리다",
+  "kite": "연", "badminton": "배드민턴", "basketball": "농구", "jump": "뛰다", "rope": "줄", "go": "가다", "inline": "인라인",
+  "skating": "스케이트 타기", "dodgeball": "피구", "taekwondo": "태권도", "run": "달리다", "race": "경주, 달리기",
+  "on": "~에(서)", "sports": "운동", "day": "날", "board": "판", "pc": "PC(컴퓨터)", "cafe": "카페", "coin": "동전",
+  "karaoke": "노래방", "library": "도서관", "bookstore": "서점", "shopping": "쇼핑", "mall": "쇼핑몰", "bakery": "빵집",
+  "escape": "탈출", "trampoline": "트램펄린", "park": "공원", "cat": "고양이", "cats": "고양이들", "hair": "머리카락",
+  "salon": "미용실", "dentist": "치과(의사)", "visit": "방문하다", "grandparents": "조부모님(할머니·할아버지)",
+  "camping": "캠핑", "pick": "따다, 줍다", "apples": "사과들", "up": "위로(pick up 줍다)", "chestnuts": "밤(열매)들",
+  "dig": "캐다", "sweet": "달콤한", "potatoes": "감자들(sweet potato 고구마)", "see": "보다", "autumn": "가을",
+  "leaves": "나뭇잎들(autumn leaves 단풍)", "hiking": "등산", "pumpkin": "호박", "soup": "수프, 죽", "have": "가지다, 하다",
+  "picnic": "소풍", "wash": "씻다", "car": "자동차", "walk": "산책시키다, 걷다", "dog": "강아지, 개", "cook": "요리하다",
+  "dinner": "저녁 식사", "travel": "여행하다", "jeju": "제주", "island": "섬", "gyeongju": "경주", "busan": "부산",
+  "climb": "오르다", "seoraksan": "설악산", "mountain": "산", "jeonju": "전주", "hanok": "한옥", "village": "마을",
+  "gyeongbokgung": "경복궁", "palace": "궁궐", "amusement": "놀이", "aquarium": "아쿠아리움(수족관)", "train": "기차",
+  "trip": "여행", "japan": "일본", "nami": "남이(섬)", "suncheon": "순천", "bay": "만(바다가 육지로 들어온 곳)",
+  // 중급 추가 단어
+  "and": "그리고", "movie": "영화", "with": "~와 함께", "little": "어린, 작은", "brother": "형제(little brother 남동생)",
+  "test": "시험", "at": "~에서", "desk": "책상", "in": "~안에서", "bed": "침대", "cousin": "사촌", "family": "가족",
+  "of": "~의", "concert": "연주회", "teacher": "선생님", "dance": "춤", "stadium": "경기장", "friends": "친구들",
+  "after": "~후에", "along": "~을 따라", "river": "강", "hill": "언덕", "dad": "아빠", "gym": "체육관",
+  "playground": "운동장, 놀이터", "classmates": "반 친구들", "black": "검은", "belt": "띠", "relay": "이어달리기",
+  "sing": "노래하다", "songs": "노래들", "borrow": "빌리다", "buy": "사다", "new": "새로운", "jacket": "재킷",
+  "bread": "빵", "high": "높이", "get": "받다, 하다", "haircut": "머리 자르기", "mom": "엄마",
+  "countryside": "시골", "forest": "숲", "farm": "농장", "apple": "사과", "grandma": "할머니", "parents": "부모님", "by": "~옆에서, ~을 타고",
+  "plane": "비행기", "bulguksa": "불국사", "temple": "절", "fireworks": "불꽃놀이", "eat": "먹다", "bibimbap": "비빔밥",
+  "seoul": "서울", "roller": "롤러", "coaster": "코스터(roller coaster 롤러코스터)", "sharks": "상어들",
+  "gangneung": "강릉", "sushi": "초밥", "yellow": "노란", "ginkgo": "은행나무", "trees": "나무들", "reeds": "갈대들",
 };
 
-/* ===== 묻는 표현 (장래 희망 묻기) ===== */
-const QUESTION_EXPRESSIONS = [
-  { en: "What do you want to be?",                  ko: "너는 무엇이 되고 싶니?",          emoji: "🤔" },
-  { en: "What do you want to be in the future?",    ko: "너는 미래에 무엇이 되고 싶니?",   emoji: "🔮" },
-  { en: "What do you want to be when you grow up?", ko: "너는 커서 무엇이 되고 싶니?",     emoji: "🌱" },
-  { en: "What's your dream job?",                   ko: "네 꿈의 직업은 뭐니?",            emoji: "💭" },
-  { en: "What job do you want to have?",            ko: "너는 어떤 직업을 갖고 싶니?",     emoji: "💼" },
-];
-
-/* ===== 반응 표현 (친구의 꿈을 듣고) ===== */
-const REACTION_EXPRESSIONS = [
-  { en: "That's great!",   ko: "멋지다!",           emoji: "👍" },
-  { en: "Cool!",           ko: "멋있다!",           emoji: "😎" },
-  { en: "Sounds great!",   ko: "좋은데!",           emoji: "🤩" },
-  { en: "Good for you!",   ko: "잘됐다!",           emoji: "👏" },
-  { en: "You can do it!",  ko: "너는 할 수 있어!",  emoji: "💪" },
-];
-
-/* ===== 내 꿈 만들기 (직업 + 이유 조합) ===== */
-const BUILD_CATS = [
-  { key: "book", label: "📘 교과서 직업" },
-  { key: "fun",  label: "🌟 인기 직업" },
-];
-
-/* ===== 단어 뜻 사전 ===== */
-function wordKey(w) {
-  return w.toLowerCase().replace(/^[^a-z0-9':]+/, "").replace(/[^a-z0-9':]+$/, "");
-}
-
-const WORD_MEANINGS = {
-  "what": "무엇",
-  "what's": "~은 무엇이니 (what is)",
-  "do": "(의문문을 만드는 말) / 하다",
-  "you": "너, 너희",
-  "your": "너의",
-  "want": "원하다",
-  "to": "~하는 것 (want to: ~하고 싶다)",
-  "be": "~이 되다",
-  "i": "나는",
-  "a": "하나의 (자음 소리 앞)",
-  "an": "하나의 (모음 소리 앞: an artist)",
-  "in": "~에, ~안에",
-  "the": "그 (특정한 것)",
-  "future": "미래",
-  "when": "~할 때",
-  "grow": "자라다 (grow up: 어른이 되다)",
-  "up": "위로 (grow up: 어른이 되다)",
-  "dream": "꿈",
-  "job": "직업, 일",
-  "have": "가지다",
-  "why": "왜",
-  "like": "좋아하다",
-  "doctor": "의사",
-  "teacher": "선생님",
-  "singer": "가수",
-  "scientist": "과학자",
-  "police": "경찰",
-  "officer": "관리, 경관 (police officer: 경찰관)",
-  "cook": "요리사; 요리하다",
-  "pilot": "비행기 조종사",
-  "firefighter": "소방관",
-  "artist": "화가, 예술가",
-  "writer": "작가",
-  "soccer": "축구",
-  "player": "선수",
-  "youtuber": "유튜버",
-  "game": "게임",
-  "games": "게임 (여러 개)",
-  "designer": "디자이너",
-  "vet": "수의사",
-  "dancer": "댄서, 무용가",
-  "helping": "돕는 것 (help)",
-  "help": "돕다",
-  "people": "사람들",
-  "children": "아이들",
-  "singing": "노래하는 것",
-  "sing": "노래하다",
-  "science": "과학",
-  "cooking": "요리하는 것",
-  "flying": "나는 것, 비행",
-  "fly": "날다",
-  "drawing": "그림 그리기",
-  "draw": "그리다",
-  "writing": "쓰는 것",
-  "write": "쓰다",
-  "stories": "이야기들",
-  "making": "만드는 것",
-  "make": "만들다",
-  "videos": "영상들",
-  "animals": "동물들",
-  "dancing": "춤추는 것",
-  "dance": "춤추다",
-  "sick": "아픈",
-  "teach": "가르치다",
-  "on": "~위에서",
-  "stage": "무대",
-  "new": "새로운",
-  "things": "것들",
-  "keep": "지키다, 유지하다",
-  "safe": "안전한",
-  "delicious": "맛있는",
-  "food": "음식",
-  "around": "~ 곳곳에",
-  "world": "세계",
-  "save": "구하다",
-  "beautiful": "아름다운",
-  "pictures": "그림들",
-  "fun": "재미있는",
-  "books": "책들",
-  "play": "경기하다, 놀다",
-  "cup": "컵, 우승컵 (World Cup: 월드컵)",
-  "my": "나의",
-  "own": "자신의",
-  "big": "큰",
-  "that's": "그것은 ~이다 (that is)",
-  "great": "멋진, 훌륭한",
-  "cool": "멋진",
-  "sounds": "~하게 들리다",
-  "good": "좋은",
-  "for": "~에게, ~을 위해",
-  "can": "~할 수 있다",
-  "it": "그것",
-};
+if (typeof module !== "undefined") module.exports = { QUESTIONS, CATS, ACTIVITIES, WORDS };
