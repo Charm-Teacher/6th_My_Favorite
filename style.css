@@ -592,3 +592,8 @@ main { max-width: 980px; margin: 0 auto; padding: 0 16px 50px; }
 .pair-ok { color: var(--pos); } .pair-no { color: var(--neg); }
 .pair-note { grid-column: 1 / -1; margin: 4px 0 0; }
 .pair-cards .ptools { border-top: none; padding-top: 0; }
+
+/* ===== 🌟 꿈 테마 (What do you want to be?) ===== */
+.app-header { background: linear-gradient(135deg, #60a5fa 0%, #8b5cf6 50%, #f472b6 100%); }
+.pair-img { width: 64px; height: 64px; object-fit: cover; border-radius: 14px; background: #fff; box-shadow: var(--shadow-sm); }
+.card .photo { object-fit: contain; background: #fff; }
