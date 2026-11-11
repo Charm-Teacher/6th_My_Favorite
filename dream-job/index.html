@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What do you want to be? · 내 꿈 말하기</title>
+  <link rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="balloon balloon1">🚀</div>
+    <div class="balloon balloon2">⭐</div>
+    <div class="confetti"></div>
+    <h1>🌟 What do you want to be?</h1>
+    <p class="subtitle">내 꿈 말하기 · 장래 희망을 묻고, 대답하고, 이유까지 말해 봐요!</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="suggest">🌟 꿈 말하기</button>
+    <button class="tab-btn" data-tab="answer">❓ 묻고 답하기</button>
+    <button class="tab-btn" data-tab="meet">💡 이유 말하기</button>
+    <button class="tab-btn" data-tab="build">🎒 내 꿈 만들기 <span id="set-count" class="tab-count">0/3</span></button>
+    <button class="tab-btn" data-tab="practice">🎤 연습 · 짝 활동</button>
+  </nav>
+
+  <div class="toolbar">
+    <label class="speed-control">말하기 속도
+      <input id="rate" type="range" min="0.6" max="1.1" step="0.05" value="0.85" />
+    </label>
+    <span id="voice-status" class="voice-status"></span>
+  </div>
+
+  <main>
+    <!-- ===== 꿈 말하기 (I want to be a ~.) ===== -->
+    <section id="tab-suggest" class="tab-panel active">
+      <div class="section-block">
+        <h2>내 꿈 말하기 · I want to be a ___. <span class="count">45개</span></h2>
+        <div class="level-switch">
+          <button class="level-btn active" data-level="beginner">초급</button>
+          <button class="level-btn" data-level="intermediate">중급</button>
+          <button class="level-btn" data-level="advanced">고급</button>
+        </div>
+        <div class="cat-switch">
+          <button class="cat-btn active" data-cat="all">전체</button>
+          <button class="cat-btn" data-cat="book">📘 교과서 직업</button>
+          <button class="cat-btn" data-cat="fun">🌟 인기 직업</button>
+        </div>
+        <p class="hint">난이도와 직업 종류를 고르면 <b>교과서 직업 7개</b>(의사·선생님·가수·과학자·경찰관·요리사·비행기 조종사)와 <b>인기 직업 8개</b>(소방관·화가·작가·축구 선수·유튜버·게임 디자이너·수의사·댄서)가 나와요. <b>중급</b>은 이유(<b>I like ___.</b>), <b>고급</b>은 하고 싶은 일까지 말해요. <b>an artist</b>처럼 모음 소리로 시작하는 직업 앞에는 <b>a</b> 대신 <b>an</b>을 써요! 단어를 누르면 뜻과 발음을 알 수 있어요.</p>
+        <div id="suggestion-grid" class="card-grid five"></div>
+      </div>
+    </section>
+
+    <!-- ===== 묻고 답하기 ===== -->
+    <section id="tab-answer" class="tab-panel">
+      <p class="hint" style="margin-bottom:18px">💡 친구의 장래 희망이 궁금하면 <b>What do you want to be?</b> 라고 물어요. 대답할 때는 <b>I want to be a ___.</b> 빈칸에 되고 싶은 직업을 넣어요.</p>
+      <div class="section-block">
+        <h2>🤔 묻기 (Question) <span class="count">5개</span></h2>
+        <p class="hint">장래 희망을 묻는 표현이에요. 교과서 표현은 <b>What do you want to be?</b> 예요.</p>
+        <div id="accept-grid" class="card-grid five"></div>
+      </div>
+      <div class="section-block">
+        <h2>🙋 대답하기 (Answer) <span class="count">15개</span></h2>
+        <p class="hint">되고 싶은 직업을 골라 빈칸을 채워요. <b>a</b>와 <b>an</b>을 잘 보세요!</p>
+        <div class="fill-box" id="refuse-fill">
+          <div class="fill-pattern">I want to be <span class="blank" id="refuse-blank">________</span>.</div>
+          <div class="fill-ko" id="refuse-ko">나는 ________이(가) 되고 싶어.</div>
+          <div class="chip-group-title">📘 교과서 직업</div>
+          <div id="refuse-chips-book" class="chip-row wrap"></div>
+          <div class="chip-group-title">🌟 인기 직업</div>
+          <div id="refuse-chips-fun" class="chip-row wrap"></div>
+          <div class="fill-actions" id="refuse-actions"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 이유 말하기 (I like ~.) + 반응 ===== -->
+    <section id="tab-meet" class="tab-panel">
+      <p class="hint" style="margin-bottom:18px">💡 친구가 <b>Why do you want to be a ___?</b> 라고 물으면 <b>I like ___.</b> 로 이유를 말해요. 친구의 꿈을 들으면 <b>That's great!</b> 처럼 반응해 줘요.</p>
+      <div class="section-block">
+        <h2>💡 이유 말하기 <span class="count">13개</span></h2>
+        <p class="hint">좋아하는 것을 골라 빈칸을 채우면 문장이 완성돼요. 완성된 문장을 들어 보세요.</p>
+        <div class="fill-box" id="meet-fill">
+          <div class="fill-pattern">I like <span class="blank" id="meet-place-blank">________</span>.</div>
+          <div class="fill-ko" id="meet-ko">나는 ________을(를) 좋아해.</div>
+          <div class="chip-group-title">❤️ 좋아하는 것 (I like ___.)</div>
+          <div id="meet-place-chips" class="chip-row wrap"></div>
+          <div class="fill-actions" id="meet-actions"></div>
+        </div>
+      </div>
+      <div class="section-block">
+        <h2>👏 반응하기 <span class="count">5개</span></h2>
+        <p class="hint">친구의 꿈을 듣고 응원해 줘요.</p>
+        <div id="reaction-grid" class="card-grid five"></div>
+      </div>
+    </section>
+
+    <!-- ===== 🎒 내 꿈 만들기 (3세트 + 내 표현) ===== -->
+    <section id="tab-build" class="tab-panel">
+      <div class="section-block">
+        <h2>🎒 내 꿈 만들기 · 되고 싶은 직업 <span class="count">3개</span></h2>
+        <p class="hint">내가 되고 싶은 <b>직업 3개</b>를 만들어요. 꿈마다 <b>직업 1개</b>와 <b>이유 1개</b>를 고르면 돼요. 다 만들면 아래 <b>📝 활동지에 적기</b> 표를 보고 영어로 옮겨 적고, <b>🎤 연습 · 짝 활동</b>에서 말해 봐요.</p>
+
+        <div class="set-tabs" id="set-tabs">
+          <button class="set-tab active" data-set="0">꿈 1</button>
+          <button class="set-tab" data-set="1">꿈 2</button>
+          <button class="set-tab" data-set="2">꿈 3</button>
+        </div>
+
+        <div class="fill-box dialog-box">
+          <div class="br-dialogue">
+            <div class="br-line line-b">
+              <span class="br-who">🙆 친구</span>
+              <div class="br-bubble">
+                <div class="br-sentence" id="set-question-line">What do you want to be?</div>
+                <div class="br-ko" id="set-question-ko">너는 무엇이 되고 싶니?</div>
+              </div>
+              <button class="speak-btn small" id="set-speak-question" aria-label="이 줄 듣기">🔊</button>
+            </div>
+            <div class="br-line line-a">
+              <span class="br-who">🙋 나</span>
+              <div class="br-bubble">
+                <div class="br-sentence">I want to be <span class="blank" id="set-event">________</span>.</div>
+                <div class="br-ko" id="set-event-ko">나는 ________이(가) 되고 싶어.</div>
+              </div>
+              <button class="speak-btn small" id="set-speak-invite" aria-label="이 줄 듣기">🔊</button>
+            </div>
+            <div class="br-line line-b">
+              <span class="br-who">🙆 친구</span>
+              <div class="br-bubble">
+                <div class="br-sentence">Why do you want to be <span class="blank" id="set-why">________</span>?</div>
+                <div class="br-ko" id="set-why-ko">너는 왜 ________이(가) 되고 싶니?</div>
+              </div>
+              <button class="speak-btn small" id="set-speak-why" aria-label="이 줄 듣기">🔊</button>
+            </div>
+            <div class="br-line line-a">
+              <span class="br-who">🙋 나</span>
+              <div class="br-bubble">
+                <div class="br-sentence">I like <span class="blank" id="set-place">________</span>.</div>
+                <div class="br-ko" id="set-meet-ko">나는 ________을(를) 좋아해.</div>
+              </div>
+              <button class="speak-btn small" id="set-speak-meet" aria-label="이 줄 듣기">🔊</button>
+            </div>
+            <div class="br-line line-b">
+              <span class="br-who">🙆 친구</span>
+              <div class="br-bubble">
+                <div class="br-sentence" id="set-answer-line">That's great!</div>
+                <div class="br-ko" id="set-answer-ko">멋지다!</div>
+              </div>
+              <button class="speak-btn small" id="set-speak-answer" aria-label="이 줄 듣기">🔊</button>
+            </div>
+          </div>
+          <div class="dlg-status" id="set-status"></div>
+          <div class="fill-actions">
+            <button id="set-listen" class="btn primary" disabled>🔊 대화 듣기</button>
+            <button id="set-random" class="btn ghost">🎲 무작위로 채우기</button>
+            <button id="set-clear" class="btn ghost">🧹 이 꿈 비우기</button>
+          </div>
+        </div>
+
+        <div class="build-step">
+          <h3 class="build-label">1️⃣ 직업 고르기 <span class="build-sub">I want to be ___.</span></h3>
+          <div id="build-events"></div>
+        </div>
+        <div class="build-step">
+          <h3 class="build-label">2️⃣ 이유 고르기 <span class="build-sub">I like ___.</span></h3>
+          <div id="build-place" class="chip-row wrap"></div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>💬 내 표현 정하기 <span class="count">질문 1 · 반응 1</span></h2>
+        <p class="hint">짝 활동에서 친구에게 물어볼 <b>질문 1개</b>와 친구의 꿈을 듣고 해 줄 <b>반응 1개</b>를 정해요. 고른 표현은 <b>위 대화</b>에 바로 나타나요.</p>
+        <div class="build-step">
+          <div class="chip-group-title">🤔 질문 (Question)</div>
+          <div id="build-accept" class="chip-row wrap"></div>
+          <div class="chip-group-title">👏 반응 (Reaction)</div>
+          <div id="build-refuse" class="chip-row wrap"></div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>📝 활동지에 적기 <span class="count">내 꿈 3개</span></h2>
+        <p class="hint">영어 문장을 보고 활동지에 그대로 옮겨 적어요. 🔊를 누르면 읽어 줘요.</p>
+        <div id="sheet-summary" class="sheet-table"></div>
+      </div>
+    </section>
+
+    <!-- ===== 🎤 연습 · 짝 활동 ===== -->
+    <section id="tab-practice" class="tab-panel">
+      <div class="section-block">
+        <h2>👫 짝 활동 카드 <span class="count">묻고 답하기</span></h2>
+        <p class="hint">짝과 번갈아 장래 희망을 묻고 답해요. 친구가 물으면 <b>내 꿈 카드</b>를 보고 대답하고, 친구의 꿈을 듣고 나면 <b>반응</b>해 준 뒤 활동지에 <b>친구 이름과 꿈</b>을 적어요.</p>
+        <div id="pair-cards" class="pair-cards"></div>
+      </div>
+      <div class="section-block">
+        <h2>🎤 컴퓨터와 미리 연습하기</h2>
+        <p class="hint">짝 활동 전에 혼자 연습해요. 줄마다 <b>🎙️ 말하기</b>로 정확도를 재고, <b>🎭 역할극</b>에서 내가 <b>A(묻는 사람)</b> 또는 <b>B(꿈을 말하는 사람)</b>를 맡으면 컴퓨터가 상대 역할을 읽어 줘요. (Chrome 권장)</p>
+        <p id="practice-empty" class="practice-empty">
+          아직 만든 꿈이 없어요! <b>🎒 내 꿈 만들기</b> 탭에서 직업과 이유를 골라 보세요.
+        </p>
+        <div id="practice-list" class="practice-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span class="voice-status">6학년 영어 · What do you want to be? 🌟</span>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
